@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/css/style.css"> <link rel="stylesheet" href="/css/dashboard.css"> <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dash-body">
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            HACK<span class="logo-accent">NEST</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item active">
+                <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
+            </a>
+            <a href="/users" class="nav-item">
+                <i data-lucide="users" class="nav-icon"></i> Users
+            </a>
+            <a href="/challenges" class="nav-item">
+                <i data-lucide="shield" class="nav-icon"></i> Challenges
+            </a>
+            <a href="/scoreboard" class="nav-item">
+                <i data-lucide="trophy" class="nav-icon"></i> Scoreboard
+            </a>
+            <a href="/notifications" class="nav-item">
+                <i data-lucide="bell" class="nav-icon"></i> Notifications
+            </a>
+            <a href="/settings" class="nav-item">
+                <i data-lucide="settings" class="nav-icon"></i> Settings
+            </a>
+        </nav>
+
+        <a href="/logout" class="sidebar-logout">
+            <i data-lucide="log-out"></i> Logout
+        </a>
+    </aside>
+
+    <main class="dash-main">
+        <header class="topbar">
+            <div class="topbar-title">System Overview</div>
+            <div class="topbar-user">
+                <span class="user-dot"></span>
+                <span id="topbar-username">admin1122</span>
+            </div>
+        </header>
+
+        <h1 class="welcome-line">
+            WELCOME BACK, <span id="welcome-name" class="logo-accent">PLAYERONE</span>
+        </h1>
+
+        <section class="stats-grid prototype-layout">
+            <div class="stat-card">
+                <span class="stat-label">Your Score:</span>
+                <div class="stat-value-large">
+                    <span id="stat-score">450</span> <small>pts</small>
+                    <span class="trend-up">↑</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Current Rank:</span>
+                <div class="stat-value-large">
+                    #<span id="stat-rank">12</span> <small>/ <span id="stat-total-users">150</span></small>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel activity-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">RECENT ACTIVITY</h2>
+            </div>
+            <div class="activity-list" id="activity-feed">
+                <div class="activity-item">
+                    <div class="activity-left">
+                        <i data-lucide="check-circle" class="icon-success"></i>
+                        <span class="activity-text">Solved <span class="highlight">[Web] Intro to SQL</span></span>
+                    </div>
+                    <span class="activity-time">5 mins ago</span>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-left">
+                        <i data-lucide="check-circle" class="icon-success"></i>
+                        <span class="activity-text">Solved <span class="highlight">[Pwn] Buffer Overflow I</span></span>
+                    </div>
+                    <span class="activity-time">1 hour ago</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Fetch User Data from your API
+        fetch('/api/user-stats')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const u = data.user;
+                    document.getElementById('topbar-username').textContent = u.Username;
+                    document.getElementById('welcome-name').textContent = u.Username.toUpperCase();
+                    document.getElementById('stat-score').textContent = u.Score;
+                    document.getElementById('stat-rank').textContent = u.Rank;
+                    document.getElementById('stat-total-users').textContent = u.TotalUsers;
+                }
+            })
+            .catch(err => console.error("Error loading stats:", err));
+    </script>
+</body>
+</html>
