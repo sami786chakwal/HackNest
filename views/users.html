@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Operatives</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dash-body">
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">HACK<span class="logo-accent">NEST</span></div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+            <a href="/users" class="nav-item active"><i data-lucide="users"></i> Users</a>
+            <a href="/challenges" class="nav-item"><i data-lucide="shield"></i> Challenges</a>
+            <a href="/scoreboard" class="nav-item"><i data-lucide="trophy"></i> Scoreboard</a>
+            <a href="/notifications" class="nav-item"><i data-lucide="bell"></i> Notifications</a>
+            <a href="/settings" class="nav-item"><i data-lucide="settings"></i> Settings</a>
+        </nav>
+        <a href="/logout" class="sidebar-logout"><i data-lucide="log-out"></i> Logout</a>
+    </aside>
+
+    <main class="dash-main">
+        <header class="topbar">
+            <div class="topbar-title">Operative Directory</div>
+            <div class="topbar-user">
+                <span class="user-dot"></span>
+                <span id="topbar-username">admin1122</span>
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">ALL REGISTERED USERS</h2>
+            </div>
+            <div class="table-container">
+                <table class="hack-table">
+                    <thead>
+                        <tr>
+                            <th>RANK</th>
+                            <th>USERNAME</th>
+                            <th>TOTAL SCORE</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <tr>
+                            <td class="rank-col">#1</td>
+                            <td class="user-col">
+                                <div class="user-info">
+                                    <span class="username">Admin_Nu</span>
+                                    <span class="user-label">ADMIN</span>
+                                </div>
+                            </td>
+                            <td class="score-col">1500 <small>pts</small></td>
+                            <td><span class="status-tag online">ACTIVE</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/api/all-users');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const tbody = document.getElementById('user-table-body');
+                    tbody.innerHTML = data.users.map((user, index) => `
+                        <tr>
+                            <td class="rank-col">#${index + 1}</td>
+                            <td class="user-col">
+                                <div class="user-info">
+                                    <span class="username">${user.Username}</span>
+                                </div>
+                            </td>
+                            <td class="score-col">${user.Score} <small>pts</small></td>
+                            <td><span class="status-tag">OPERATIVE</span></td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error("Failed to load users:", err);
+            }
+        }
+
+        fetchUsers();
+    </script>
+</body>
+</html>

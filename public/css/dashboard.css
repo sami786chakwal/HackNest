@@ -119,3 +119,54 @@ body.dash-body {
 
 .qc-label { color: #fff; display: block; font-weight: 600; margin: 10px 0; }
 .qc-desc { color: #94a3b8; font-size: 13px; line-height: 1.4; }
+
+/* TABLE STYLES */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    padding: 10px;
+}
+
+.hack-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.hack-table th {
+    padding: 16px 24px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hack-table td {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: #f8fafc;
+    vertical-align: middle;
+}
+
+.rank-col { font-family: 'JetBrains Mono', monospace; color: #3b82f6; font-weight: 700; }
+.username { font-weight: 600; font-size: 15px; }
+.score-col { font-weight: 700; color: #fff; }
+.score-col small { color: #64748b; margin-left: 4px; }
+
+.status-tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(255,255,255,0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.status-tag.online {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.2);
+}

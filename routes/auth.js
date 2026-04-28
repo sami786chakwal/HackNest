@@ -25,6 +25,10 @@ router.get('/dashboard', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '../views/dashboard.html'));
 });
 
+router.get('/users', checkAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, '../views/users.html'));
+});
+
 // --- API ROUTES ---
 
 // POST /register
@@ -120,6 +124,21 @@ router.get('/logout', (req, res) => {
         res.clearCookie('connect.sid'); // Clean up cookie on client
         res.redirect('/login');
     });
+});
+// GET /api/all-users - For leaderboard display
+router.get('/api/all-users', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT Username, Score, Role, Rank() OVER (ORDER BY Score DESC) as UserRank
+            FROM Users
+            ORDER BY Score DESC
+        `);
+        res.json({ success: true, users: result.recordset });
+    } catch (err) {
+        console.error('All Users API Error:', err);
+        res.status(500).json({ success: false, message: 'Unable to fetch users.' });
+    }
 });
 
 module.exports = router;
