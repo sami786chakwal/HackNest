@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Profile</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dash-body">
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            HACK<span class="logo-accent">NEST</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">
+                <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
+            </a>
+            <a href="/users" class="nav-item">
+                <i data-lucide="users" class="nav-icon"></i> Users
+            </a>
+            <a href="/challenges" class="nav-item">
+                <i data-lucide="shield" class="nav-icon"></i> Challenges
+            </a>
+            <a href="/scoreboard" class="nav-item">
+                <i data-lucide="trophy" class="nav-icon"></i> Scoreboard
+            </a>
+            <a href="/profile" class="nav-item active">
+                <i data-lucide="user" class="nav-icon"></i> Profile
+            </a>
+            <a href="/notifications" class="nav-item">
+                <i data-lucide="bell" class="nav-icon"></i> Notifications
+            </a>
+            <a href="/settings" class="nav-item">
+                <i data-lucide="settings" class="nav-icon"></i> Settings
+            </a>
+        </nav>
+
+        <a href="/logout" class="sidebar-logout">
+            <i data-lucide="log-out"></i> Logout
+        </a>
+    </aside>
+
+    <main class="dash-main">
+        <header class="topbar">
+            <div class="topbar-title">User Profile</div>
+            <div class="topbar-user">
+                <span class="user-dot"></span>
+                <span id="topbar-username">admin1122</span>
+            </div>
+        </header>
+
+        <h1 class="welcome-line">
+            PROFILE: <span id="profile-name" class="logo-accent">PLAYERONE</span>
+        </h1>
+
+        <section class="stats-grid profile-stats">
+            <div class="stat-card profile-main">
+                <div class="profile-avatar">
+                    <i data-lucide="user" class="profile-icon"></i>
+                </div>
+                <div class="profile-info">
+                    <h3 id="profile-username">Username</h3>
+                    <p class="profile-role">CTF Operative</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Total Points:</span>
+                <div class="stat-value-large">
+                    <span id="profile-score">450</span> <small>pts</small>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Current Rank:</span>
+                <div class="stat-value-large">
+                    #<span id="profile-rank">12</span> <small>/ <span id="profile-total-users">150</span></small>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel profile-details">
+            <div class="panel-header">
+                <h2 class="panel-title">PROFILE DETAILS</h2>
+            </div>
+            <div class="profile-stats-grid">
+                <div class="detail-item">
+                    <i data-lucide="calendar" class="detail-icon"></i>
+                    <div class="detail-content">
+                        <span class="detail-label">Member Since</span>
+                        <span class="detail-value" id="member-since">January 2024</span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <i data-lucide="target" class="detail-icon"></i>
+                    <div class="detail-content">
+                        <span class="detail-label">Challenges Solved</span>
+                        <span class="detail-value" id="challenges-solved">23</span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <i data-lucide="trending-up" class="detail-icon"></i>
+                    <div class="detail-content">
+                        <span class="detail-label">Average Score</span>
+                        <span class="detail-value" id="avg-score">89.5</span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <i data-lucide="award" class="detail-icon"></i>
+                    <div class="detail-content">
+                        <span class="detail-label">Achievements</span>
+                        <span class="detail-value" id="achievements">5</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Fetch User Profile Data
+        fetch('/api/user-profile')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const u = data.user;
+                    document.getElementById('topbar-username').textContent = u.Username;
+                    document.getElementById('profile-name').textContent = u.Username.toUpperCase();
+                    document.getElementById('profile-username').textContent = u.Username;
+                    document.getElementById('profile-score').textContent = u.Score || '0';
+                    document.getElementById('profile-rank').textContent = u.Rank || 'N/A';
+                    document.getElementById('profile-total-users').textContent = u.TotalUsers || '0';
+
+                    // Additional profile details (you can expand this based on your API)
+                    if (u.MemberSince) {
+                        document.getElementById('member-since').textContent = new Date(u.MemberSince).toLocaleDateString();
+                    }
+                    document.getElementById('challenges-solved').textContent = u.ChallengesSolved || '0';
+                    document.getElementById('avg-score').textContent = u.AverageScore || '0.0';
+                    document.getElementById('achievements').textContent = u.Achievements || '0';
+                }
+            })
+            .catch(err => console.error("Error loading profile:", err));
+    </script>
+</body>
+</html>

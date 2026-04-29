@@ -29,6 +29,10 @@ router.get('/users', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, '../views/users.html'));
 });
 
+router.get('/profile', checkAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, '../views/profile.html'));
+});
+
 // --- API ROUTES ---
 
 // POST /register
@@ -110,6 +114,28 @@ router.get('/api/user-stats', async (req, res) => {
                 SELECT Username, Score, Role,
                 (SELECT COUNT(*) + 1 FROM Users WHERE Score > u.Score) as Rank,
                 (SELECT COUNT(*) FROM Users WHERE IsHidden = 0) as TotalUsers
+                FROM Users u WHERE UserID = @id
+            `);
+
+        res.json({ success: true, user: result.recordset[0] });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// GET /api/user-profile
+router.get('/api/user-profile', async (req, res) => {
+    if (!req.session.user) return res.status(401).json({ success: false });
+
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('id', sql.Int, req.session.user.id)
+            .query(`
+                SELECT Username, Score, Role, CreatedAt as MemberSince,
+                (SELECT COUNT(*) + 1 FROM Users WHERE Score > u.Score) as Rank,
+                (SELECT COUNT(*) FROM Users WHERE IsHidden = 0) as TotalUsers,
+                0 as ChallengesSolved, 0.0 as AverageScore, 0 as Achievements
                 FROM Users u WHERE UserID = @id
             `);
 
