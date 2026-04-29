@@ -101,7 +101,38 @@ body.dash-body {
     overflow: hidden;
 }
 
-.panel-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.panel-header { 
+    padding: 20px 24px; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    width: 200px;
+}
+
+.search-input::placeholder {
+    color: #94a3b8;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
 
 .quick-links {
     display: grid;

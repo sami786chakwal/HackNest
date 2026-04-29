@@ -125,15 +125,23 @@ router.get('/logout', (req, res) => {
         res.redirect('/login');
     });
 });
-// GET /api/all-users - For leaderboard display
+
+// GET /api/all-users - Supports searching via ?search=
 router.get('/api/all-users', async (req, res) => {
+    const { search } = req.query; // Get the search term from URL query
+
     try {
         const pool = await poolPromise;
-        const result = await pool.request().query(`
-            SELECT Username, Score, Role, Rank() OVER (ORDER BY Score DESC) as UserRank
-            FROM Users
-            ORDER BY Score DESC
-        `);
+        let query = 'SELECT Username FROM Users';
+        const request = pool.request();
+
+        // If a search term exists, add the WHERE LIKE clause
+        if (search) {
+            query += ' WHERE Username LIKE @search';
+            request.input('search', sql.NVarChar, `%${search}%`); // SQL LIKE syntax
+        }
+
+        const result = await request.query(query);
         res.json({ success: true, users: result.recordset });
     } catch (err) {
         console.error('All Users API Error:', err);
