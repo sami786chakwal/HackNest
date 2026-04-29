@@ -29,6 +29,11 @@
             <a href="/scoreboard" class="nav-item">
                 <i data-lucide="trophy" class="nav-icon"></i> Scoreboard
             </a>
+            <div id="admin-panel-link" style="display: none;">
+                <a href="/admin/users" class="nav-item admin-nav">
+                    <i data-lucide="shield-check" class="nav-icon"></i> Admin Panel
+                </a>
+            </div>
             <a href="/profile" class="nav-item">
                 <i data-lucide="user" class="nav-icon"></i> Profile
             </a>
@@ -73,6 +78,17 @@
                     #<span id="stat-rank">12</span> <small>/ <span id="stat-total-users">150</span></small>
                 </div>
             </div>
+
+            <div class="stat-card admin-panel-card" id="admin-panel-card" style="display: none;">
+                <span class="stat-label">Admin Panel</span>
+                <div class="stat-value-large">
+                    <a href="/admin/users" class="admin-access-btn">
+                        <i data-lucide="shield-check"></i>
+                        Access Admin
+                    </a>
+                </div>
+                <small class="admin-desc">Manage users, system settings</small>
+            </div>
         </section>
 
         <section class="panel activity-panel">
@@ -114,6 +130,12 @@
                     document.getElementById('stat-score').textContent = u.Score;
                     document.getElementById('stat-rank').textContent = u.Rank;
                     document.getElementById('stat-total-users').textContent = u.TotalUsers;
+
+                    // Show admin panel link if user is admin
+                    if (u.Role && u.Role.toLowerCase() === 'admin') {
+                        document.getElementById('admin-panel-link').style.display = 'block';
+                        document.getElementById('admin-panel-card').style.display = 'block';
+                    }
                 }
             })
             .catch(err => console.error("Error loading stats:", err));

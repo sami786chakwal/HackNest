@@ -18,6 +18,9 @@
             <a href="/users" class="nav-item active"><i data-lucide="users"></i> Users</a>
             <a href="/challenges" class="nav-item"><i data-lucide="shield"></i> Challenges</a>
             <a href="/scoreboard" class="nav-item"><i data-lucide="trophy"></i> Scoreboard</a>
+            <div id="admin-panel-link-users" style="display: none;">
+                <a href="/admin/users" class="nav-item admin-nav"><i data-lucide="shield-check"></i> Admin Panel</a>
+            </div>
             <a href="/profile" class="nav-item"><i data-lucide="user"></i> Profile</a>
             <a href="/notifications" class="nav-item"><i data-lucide="bell"></i> Notifications</a>
             <a href="/settings" class="nav-item"><i data-lucide="settings"></i> Settings</a>
@@ -80,6 +83,13 @@
                     allUsers = data.users;
                     renderUsers(allUsers);
                 }
+
+                // Check if current user is admin
+                const userResponse = await fetch('/api/user-stats');
+                const userData = await userResponse.json();
+                if (userData.success && userData.user.Role && userData.user.Role.toLowerCase() === 'admin') {
+                    document.getElementById('admin-panel-link-users').style.display = 'block';
+                }
             } catch (err) {
                 console.error("Failed to load users:", err);
             }
@@ -91,7 +101,7 @@
                 <tr>
                     <td class="user-col">
                         <div class="user-info">
-                            <span class="username">${user.Username}</span>
+                            <a href="/profile/${user.Username}" class="username-link">${user.Username}</a>
                         </div>
                     </td>
                 </tr>

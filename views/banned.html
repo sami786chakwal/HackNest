@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Account Banned</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dash-body">
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            HACK<span class="logo-accent">NEST</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/logout" class="sidebar-logout">
+                <i data-lucide="log-out"></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dash-main">
+        <header class="topbar">
+            <div class="topbar-title">Account Status</div>
+        </header>
+
+        <div class="banned-container">
+            <div class="banned-card">
+                <div class="banned-icon">
+                    <i data-lucide="shield-x"></i>
+                </div>
+                <h1 class="banned-title">Account Banned</h1>
+                <p class="banned-message">
+                    Your account has been banned by an administrator. You cannot access the platform until your ban is lifted.
+                </p>
+                <p class="banned-contact">
+                    If you believe this is a mistake, please contact the platform administrators.
+                </p>
+                <a href="/logout" class="banned-logout-btn">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -42,7 +42,9 @@ app.use(session({
 
 // --- 4. Routes ---
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 app.use('/', authRoutes);
+app.use('/', adminRoutes);
 
 // Global 404 Handler
 app.use((req, res) => {
