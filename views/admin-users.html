@@ -16,31 +16,13 @@
     <aside class="sidebar">
         <div class="sidebar-logo">
             HACK<span class="logo-accent">NEST</span>
-            <span class="admin-badge">ADMIN</span>
-        </div>
 
         <nav class="sidebar-nav">
-            <a href="/dashboard" class="nav-item">
-                <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
-            </a>
-            <a href="/users" class="nav-item">
-                <i data-lucide="users" class="nav-icon"></i> Users
-            </a>
-            <a href="/challenges" class="nav-item">
-                <i data-lucide="shield" class="nav-icon"></i> Challenges
-            </a>
-            <a href="/scoreboard" class="nav-item">
-                <i data-lucide="trophy" class="nav-icon"></i> Scoreboard
-            </a>
-            <a href="/admin/users" class="nav-item active">
-                <i data-lucide="shield-check" class="nav-icon"></i> Admin Panel
-            </a>
-            <a href="/notifications" class="nav-item">
-                <i data-lucide="bell" class="nav-icon"></i> Notifications
-            </a>
-            <a href="/settings" class="nav-item">
-                <i data-lucide="settings" class="nav-icon"></i> Settings
-            </a>
+            <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+            <a href="/admin/users" class="nav-item admin-nav active"><i data-lucide="users"></i> Manage Users</a>
+            <a href="/admin/challenges" class="nav-item admin-nav"><i data-lucide="shield"></i> Manage Challenges</a>
+            <a href="/challenges" class="nav-item"><i data-lucide="eye"></i> View as Player</a>
+            <a href="/profile" class="nav-item"><i data-lucide="user"></i> Profile</a>
         </nav>
 
         <a href="/logout" class="sidebar-logout">
@@ -50,7 +32,7 @@
 
     <main class="dash-main">
         <header class="topbar">
-            <div class="topbar-title">Admin Control Center</div>
+            <div class="topbar-title">User Management <span class="admin-badge">ADMIN</span></div>
             <div class="topbar-user">
                 <span class="user-dot admin-dot"></span>
                 <span id="topbar-username">admin</span>

@@ -31,7 +31,12 @@ const checkAdmin = (req, res, next) => {
     res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
 };
 
-// GET /admin/users - Admin dashboard
+// GET /admin - Admin dashboard
+router.get('/admin', checkAdmin, checkNotBanned, (req, res) => {
+    res.sendFile(require('path').join(__dirname, '../views/admin-dashboard.html'));
+});
+
+// GET /admin/users - Admin user management
 router.get('/admin/users', checkAdmin, checkNotBanned, (req, res) => {
     res.sendFile(require('path').join(__dirname, '../views/admin-users.html'));
 });
@@ -40,7 +45,7 @@ router.get('/admin/users', checkAdmin, checkNotBanned, (req, res) => {
 router.get('/api/admin/stats', checkAdmin, checkNotBanned, async (req, res) => {
     try {
         const pool = await poolPromise;
-        const result = await pool.request()
+        const userResult = await pool.request()
             .query(`
                 SELECT
                     COUNT(*) as totalUsers,
@@ -50,7 +55,24 @@ router.get('/api/admin/stats', checkAdmin, checkNotBanned, async (req, res) => {
                 FROM Users
             `);
 
-        res.json({ success: true, stats: result.recordset[0] });
+        const challengeResult = await pool.request()
+            .query(`
+                SELECT
+                    COUNT(*) as totalChallenges,
+                    SUM(CASE WHEN IsActive = 1 THEN 1 ELSE 0 END) as activeChallenges
+                FROM Challenges
+            `);
+
+        const solveResult = await pool.request()
+            .query(`SELECT COUNT(*) as totalSolves FROM Solves`);
+
+        const stats = {
+            ...userResult.recordset[0],
+            ...challengeResult.recordset[0],
+            ...solveResult.recordset[0]
+        };
+
+        res.json({ success: true, stats });
     } catch (err) {
         console.error('Admin stats error:', err);
         res.status(500).json({ success: false, message: 'Failed to load statistics.' });

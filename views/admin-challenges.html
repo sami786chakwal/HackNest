@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Admin: Challenges</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .diff-badge { padding:4px 10px; border-radius:6px; font-size:11px; font-weight:700; }
+        .diff-easy   { background:rgba(16,185,129,0.1); color:#10b981; }
+        .diff-medium { background:rgba(245,158,11,0.1); color:#f59e0b; }
+        .diff-hard   { background:rgba(239,68,68,0.1);  color:#ef4444; }
+        .diff-insane { background:rgba(139,92,246,0.1); color:#8b5cf6; }
+        .form-group textarea {
+            width:100%; padding:10px 12px; background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1); border-radius:6px;
+            color:#fff; font-size:14px; font-family:'Inter',sans-serif;
+            resize:vertical; min-height:100px;
+        }
+        .form-group textarea:focus {
+            outline:none; border-color:#3b82f6;
+            box-shadow:0 0 0 2px rgba(59,130,246,0.2);
+        }
+        .flag-preview {
+            font-family:'JetBrains Mono',monospace; color:#10b981; font-size:13px;
+        }
+        .solves-badge {
+            display:inline-flex; align-items:center; gap:5px;
+            background:rgba(59,130,246,0.1); color:#60a5fa;
+            padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600;
+        }
+        .active-tag {
+            background:rgba(16,185,129,0.1); color:#10b981;
+            border:1px solid rgba(16,185,129,0.2);
+            padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700;
+        }
+        .inactive-tag {
+            background:rgba(239,68,68,0.1); color:#ef4444;
+            border:1px solid rgba(239,68,68,0.2);
+            padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700;
+        }
+    </style>
+</head>
+<body class="dash-body">
+
+<aside class="sidebar">
+    <div class="sidebar-logo">HACK<span class="logo-accent">NEST</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+        <a href="/admin/users" class="nav-item admin-nav"><i data-lucide="users"></i> Manage Users</a>
+        <a href="/admin/challenges" class="nav-item admin-nav active"><i data-lucide="shield"></i> Manage Challenges</a>
+        <a href="/challenges" class="nav-item"><i data-lucide="eye"></i> View as Player</a>
+        <a href="/profile" class="nav-item"><i data-lucide="user"></i> Profile</a>
+    </nav>
+    <a href="/logout" class="sidebar-logout"><i data-lucide="log-out"></i> Logout</a>
+</aside>
+
+<main class="dash-main">
+    <header class="topbar">
+        <div class="topbar-title">Challenge Management <span class="admin-badge">ADMIN</span></div>
+        <div class="topbar-user"><span class="user-dot admin-dot"></span><span id="topbar-username">Admin</span></div>
+    </header>
+
+    <section class="stats-grid admin-stats" style="margin-bottom:30px">
+        <div class="stat-card"><span class="stat-label">Total</span><div class="stat-value" id="s-total">0</div></div>
+        <div class="stat-card"><span class="stat-label">Active</span><div class="stat-value" style="color:#10b981" id="s-active">0</div></div>
+        <div class="stat-card"><span class="stat-label">Inactive</span><div class="stat-value" style="color:#ef4444" id="s-inactive">0</div></div>
+        <div class="stat-card"><span class="stat-label">Total Solves</span><div class="stat-value" style="color:#3b82f6" id="s-solves">0</div></div>
+    </section>
+
+    <div class="panel admin-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">ALL CHALLENGES</h2>
+            <div class="admin-controls" style="margin:0;padding:0">
+                <input type="text" id="ch-search" placeholder="Search challenges..." class="search-input">
+                <button class="admin-btn primary" onclick="openCreateModal()">
+                    <i data-lucide="plus"></i> New Challenge
+                </button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="hack-table admin-table">
+                <thead><tr>
+                    <th>ID</th><th>TITLE</th><th>CATEGORY</th><th>DIFFICULTY</th>
+                    <th>POINTS</th><th>SOLVES</th><th>STATUS</th><th>ACTIONS</th>
+                </tr></thead>
+                <tbody id="ch-table-body">
+                    <tr><td colspan="8" style="text-align:center;color:#64748b;padding:40px">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Create/Edit Modal -->
+<div class="modal" id="ch-modal" style="display:none">
+    <div class="modal-content large-modal">
+        <div class="modal-header">
+            <h3><i data-lucide="shield"></i> <span id="modal-heading">New Challenge</span></h3>
+            <span class="modal-close" onclick="closeModal()">✕</span>
+        </div>
+        <div class="modal-form">
+            <input type="hidden" id="edit-id">
+            <div class="form-section">
+                <h4>Challenge Info</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" id="f-title" placeholder="e.g. SQL Injection 101">
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="f-category">
+                            <option value="Web">Web</option>
+                            <option value="Pwn">Pwn</option>
+                            <option value="Crypto">Crypto</option>
+                            <option value="Forensics">Forensics</option>
+                            <option value="Reverse Engineering">Reverse Engineering</option>
+                            <option value="OSINT">OSINT</option>
+                            <option value="Misc">Misc</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="f-desc" placeholder="Describe the challenge, give context, link to files if needed..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Difficulty *</label>
+                        <select id="f-diff">
+                            <option value="Easy">Easy</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="Hard">Hard</option>
+                            <option value="Insane">Insane</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Points *</label>
+                        <input type="number" id="f-points" placeholder="100" min="1" max="10000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>Flag & Hint</h4>
+                <div class="form-group">
+                    <label>Flag * <span class="field-help">Exact string players must submit. e.g. HackNest{s3cr3t_flag}</span></label>
+                    <input type="text" id="f-flag" placeholder="HackNest{...}" class="flag-preview">
+                </div>
+                <div class="form-group">
+                    <label>Hint <span class="field-help">Optional. Players can reveal this during the challenge.</span></label>
+                    <textarea id="f-hint" placeholder="Optional hint..." style="min-height:70px"></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>State</h4>
+                <div class="toggle-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="f-active" checked>
+                        <span class="toggle-slider"></span>
+                        Active (visible to players)
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="admin-btn secondary" onclick="closeModal()">Cancel</button>
+                <button class="admin-btn primary" onclick="saveChallenge()">
+                    <i data-lucide="save"></i> <span id="save-btn-text">Create Challenge</span>
+                </button>
+            </div>
+            <div id="modal-msg" style="margin-top:16px;display:none" class="submit-result"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.submit-result { padding:12px 16px; border-radius:8px; font-size:14px; font-weight:600; }
+.submit-result.success { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#34d399; }
+.submit-result.error   { background:rgba(239,68,68,0.1);  border:1px solid rgba(239,68,68,0.2);  color:#f87171; }
+</style>
+
+<script>
+lucide.createIcons();
+let allChallenges = [];
+
+async function loadChallenges() {
+    const [chRes, userRes] = await Promise.all([
+        fetch('/api/admin/challenges').then(r => r.json()),
+        fetch('/api/user-stats').then(r => r.json())
+    ]);
+    if (userRes.success) document.getElementById('topbar-username').textContent = userRes.user.Username;
+    if (!chRes.success) return;
+
+    allChallenges = chRes.challenges;
+    updateStats();
+    renderTable(allChallenges);
+}
+
+function updateStats() {
+    const active   = allChallenges.filter(c => c.IsActive).length;
+    const totalSolves = allChallenges.reduce((s, c) => s + c.SolveCount, 0);
+    document.getElementById('s-total').textContent   = allChallenges.length;
+    document.getElementById('s-active').textContent  = active;
+    document.getElementById('s-inactive').textContent= allChallenges.length - active;
+    document.getElementById('s-solves').textContent  = totalSolves;
+}
+
+function renderTable(challenges) {
+    const tbody = document.getElementById('ch-table-body');
+    if (!challenges.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:40px">No challenges found.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = challenges.map(c => `
+        <tr>
+            <td class="rank-col">#${c.ChallengeID}</td>
+            <td><span style="color:#fff;font-weight:600">${escHtml(c.Title)}</span></td>
+            <td><span style="color:#60a5fa;font-size:13px">${escHtml(c.Category)}</span></td>
+            <td><span class="diff-badge diff-${c.Difficulty.toLowerCase()}">${c.Difficulty}</span></td>
+            <td><span style="color:#3b82f6;font-weight:700">${c.Points}</span> <small style="color:#64748b">pts</small></td>
+            <td><span class="solves-badge"><i data-lucide="users" style="width:12px;height:12px"></i> ${c.SolveCount}</span></td>
+            <td>
+                <span class="${c.IsActive ? 'active-tag' : 'inactive-tag'}" id="status-${c.ChallengeID}">
+                    ${c.IsActive ? 'ACTIVE' : 'INACTIVE'}
+                </span>
+            </td>
+            <td class="actions-col">
+                <button class="action-btn edit" onclick="openEditModal(${c.ChallengeID})" title="Edit">
+                    <i data-lucide="pencil"></i>
+                </button>
+                <button class="action-btn ${c.IsActive ? 'hide' : 'show'}" onclick="toggleChallenge(${c.ChallengeID})" title="Toggle Active">
+                    <i data-lucide="${c.IsActive ? 'eye-off' : 'eye'}"></i>
+                </button>
+                <button class="action-btn delete" onclick="deleteChallenge(${c.ChallengeID})" title="Delete">
+                    <i data-lucide="trash-2"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    lucide.createIcons();
+}
+
+document.getElementById('ch-search').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    renderTable(allChallenges.filter(c =>
+        c.Title.toLowerCase().includes(q) || c.Category.toLowerCase().includes(q)
+    ));
+});
+
+function openCreateModal() {
+    document.getElementById('modal-heading').textContent = 'New Challenge';
+    document.getElementById('save-btn-text').textContent = 'Create Challenge';
+    document.getElementById('edit-id').value = '';
+    ['f-title','f-desc','f-flag','f-hint'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-category').value = 'Web';
+    document.getElementById('f-diff').value = 'Medium';
+    document.getElementById('f-points').value = '100';
+    document.getElementById('f-active').checked = true;
+    hideMsg();
+    document.getElementById('ch-modal').style.display = 'flex';
+    lucide.createIcons();
+}
+
+function openEditModal(id) {
+    const c = allChallenges.find(x => x.ChallengeID === id);
+    if (!c) return;
+    document.getElementById('modal-heading').textContent = 'Edit Challenge';
+    document.getElementById('save-btn-text').textContent = 'Save Changes';
+    document.getElementById('edit-id').value = c.ChallengeID;
+    document.getElementById('f-title').value    = c.Title;
+    document.getElementById('f-desc').value     = c.Description;
+    document.getElementById('f-category').value = c.Category;
+    document.getElementById('f-diff').value     = c.Difficulty;
+    document.getElementById('f-points').value   = c.Points;
+    document.getElementById('f-flag').value     = c.Flag;
+    document.getElementById('f-hint').value     = c.Hint || '';
+    document.getElementById('f-active').checked = !!c.IsActive;
+    hideMsg();
+    document.getElementById('ch-modal').style.display = 'flex';
+    lucide.createIcons();
+}
+
+function closeModal() {
+    document.getElementById('ch-modal').style.display = 'none';
+}
+
+async function saveChallenge() {
+    const editId = document.getElementById('edit-id').value;
+    const payload = {
+        challengeId:  editId || undefined,
+        title:       document.getElementById('f-title').value.trim(),
+        description: document.getElementById('f-desc').value.trim(),
+        category:    document.getElementById('f-category').value,
+        difficulty:  document.getElementById('f-diff').value,
+        points:      document.getElementById('f-points').value,
+        flag:        document.getElementById('f-flag').value.trim(),
+        hint:        document.getElementById('f-hint').value.trim(),
+        isActive:    document.getElementById('f-active').checked
+    };
+    if (!payload.title || !payload.description || !payload.flag || !payload.points)
+        return showMsg('Please fill all required fields.', false);
+
+    const method = editId ? 'PUT' : 'POST';
+    const res = await fetch('/api/admin/challenges', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(r => r.json());
+
+    showMsg(res.message, res.success);
+    if (res.success) { setTimeout(() => { closeModal(); loadChallenges(); }, 900); }
+}
+
+async function toggleChallenge(id) {
+    const res = await fetch(`/api/admin/challenges/${id}/toggle`, { method: 'PATCH' }).then(r => r.json());
+    if (res.success) loadChallenges();
+}
+
+async function deleteChallenge(id) {
+    const c = allChallenges.find(x => x.ChallengeID === id);
+    if (!confirm(`Delete "${c?.Title}"? This will also remove all solve records.`)) return;
+    const res = await fetch(`/api/admin/challenges/${id}`, { method: 'DELETE' }).then(r => r.json());
+    if (res.success) loadChallenges();
+}
+
+function showMsg(msg, ok) {
+    const el = document.getElementById('modal-msg');
+    el.textContent = msg;
+    el.className = 'submit-result ' + (ok ? 'success' : 'error');
+    el.style.display = 'block';
+}
+function hideMsg() { document.getElementById('modal-msg').style.display = 'none'; }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+document.getElementById('ch-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('ch-modal')) closeModal();
+});
+
+loadChallenges();
+</script>
+</body>
+</html>

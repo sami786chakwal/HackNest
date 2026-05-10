@@ -43,6 +43,8 @@ app.use(session({
 // --- 4. Routes ---
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const challengeRoutes = require('./routes/challenges');
+app.use('/', challengeRoutes);
 app.use('/', authRoutes);
 app.use('/', adminRoutes);
 

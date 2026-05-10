@@ -52,7 +52,7 @@ router.get('/users', checkAuth, checkNotBanned, (req, res) => {
 });
 
 router.get('/profile', checkAuth, checkNotBanned, (req, res) => {
-    res.sendFile(path.join(__dirname, '../views/profile.html'));
+    res.redirect(`/profile/${req.session.user.username}`);
 });
 
 router.get('/profile/:username', checkAuth, checkNotBanned, async (req, res) => {
@@ -197,12 +197,22 @@ router.get('/api/user-profile/:username', checkAuth, checkNotBanned, async (req,
         const result = await pool.request()
             .input('username', sql.NVarChar, username)
             .query(`
-                SELECT Username, Score, CreatedAt as MemberSince,
+                SELECT u.Username, u.Score, u.CreatedAt as MemberSince,
                 (SELECT COUNT(*) + 1 FROM Users WHERE Score > u.Score) as Rank,
                 (SELECT COUNT(*) FROM Users WHERE IsHidden = 0) as TotalUsers,
-                0 as ChallengesSolved, 0.0 as AverageScore, 0 as Achievements
+                ISNULL(solved.ChallengesSolved, 0) as ChallengesSolved,
+                ISNULL(solved.AverageScore, 0.0) as AverageScore,
+                0 as Achievements
                 FROM Users u
-                WHERE Username = @username AND ISNULL(IsHidden, 0) = 0
+                LEFT JOIN (
+                    SELECT s.UserID,
+                           COUNT(s.SolveID) as ChallengesSolved,
+                           AVG(c.Points) as AverageScore
+                    FROM Solves s
+                    JOIN Challenges c ON s.ChallengeID = c.ChallengeID
+                    GROUP BY s.UserID
+                ) solved ON u.UserID = solved.UserID
+                WHERE u.Username = @username AND ISNULL(u.IsHidden, 0) = 0
             `);
 
         if (result.recordset.length === 0) {

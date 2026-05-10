@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Challenges</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .challenge-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+        .filter-btn {
+            padding: 8px 18px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: rgba(59,130,246,0.15);
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .challenge-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .challenge-card:hover {
+            border-color: rgba(59,130,246,0.4);
+            background: rgba(59,130,246,0.04);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .challenge-card.solved {
+            border-color: rgba(16,185,129,0.3);
+            background: rgba(16,185,129,0.03);
+        }
+        .challenge-card.solved:hover {
+            border-color: rgba(16,185,129,0.5);
+        }
+        .solved-ribbon {
+            position: absolute;
+            top: 14px;
+            right: -28px;
+            background: #10b981;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 36px;
+            transform: rotate(45deg);
+            letter-spacing: 1px;
+        }
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+        .cat-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .cat-web      { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .cat-pwn      { background: rgba(239,68,68,0.15);  color: #f87171; }
+        .cat-crypto   { background: rgba(139,92,246,0.15); color: #a78bfa; }
+        .cat-forensics{ background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .cat-misc     { background: rgba(16,185,129,0.15); color: #34d399; }
+        .cat-rev      { background: rgba(236,72,153,0.15); color: #f472b6; }
+        .cat-osint    { background: rgba(6,182,212,0.15);  color: #22d3ee; }
+        .diff-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+        .diff-easy   { background: rgba(16,185,129,0.1); color: #10b981; }
+        .diff-medium { background: rgba(245,158,11,0.1); color: #f59e0b; }
+        .diff-hard   { background: rgba(239,68,68,0.1);  color: #ef4444; }
+        .diff-insane { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+        .card-title {
+            color: #fff;
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        .card-desc {
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0 0 18px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-points {
+            font-size: 22px;
+            font-weight: 800;
+            color: #3b82f6;
+        }
+        .card-points small { font-size: 12px; color: #64748b; font-weight: 500; }
+        .card-solves {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Submit Modal */
+        .submit-modal { display: none; }
+        .submit-modal.open { display: flex; }
+        .modal-body { padding: 24px; }
+        .challenge-detail-title {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        .challenge-detail-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .challenge-detail-desc {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.7;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+        }
+        .hint-box {
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 20px;
+            color: #fbbf24;
+            font-size: 13px;
+            display: none;
+        }
+        .hint-toggle {
+            background: none;
+            border: 1px solid rgba(245,158,11,0.3);
+            color: #f59e0b;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .hint-toggle:hover { background: rgba(245,158,11,0.1); }
+        .flag-input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .flag-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
+        .flag-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .submit-btn {
+            padding: 12px 22px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .submit-btn:hover { background: #2563eb; }
+        .submit-result {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            display: none;
+        }
+        .submit-result.success {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.2);
+            color: #34d399;
+        }
+        .submit-result.error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            color: #f87171;
+        }
+        .no-challenges {
+            text-align: center;
+            padding: 80px 20px;
+            color: #64748b;
+        }
+        .no-challenges i { width: 48px; height: 48px; margin-bottom: 16px; }
+    </style>
+</head>
+<body class="dash-body">
+
+<aside class="sidebar">
+    <div class="sidebar-logo">HACK<span class="logo-accent">NEST</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard</a>
+        <a href="/users" class="nav-item"><i data-lucide="users" class="nav-icon"></i> Users</a>
+        <a href="/challenges" class="nav-item active"><i data-lucide="shield" class="nav-icon"></i> Challenges</a>
+        <a href="/scoreboard" class="nav-item"><i data-lucide="trophy" class="nav-icon"></i> Scoreboard</a>
+        <div id="admin-panel-link" style="display:none">
+            <a href="/admin/challenges" class="nav-item admin-nav"><i data-lucide="shield-check" class="nav-icon"></i> Admin Panel</a>
+        </div>
+        <a href="/profile" class="nav-item"><i data-lucide="user" class="nav-icon"></i> Profile</a>
+        <a href="/notifications" class="nav-item"><i data-lucide="bell" class="nav-icon"></i> Notifications</a>
+        <a href="/settings" class="nav-item"><i data-lucide="settings" class="nav-icon"></i> Settings</a>
+    </nav>
+    <a href="/logout" class="sidebar-logout"><i data-lucide="log-out"></i> Logout</a>
+</aside>
+
+<main class="dash-main">
+    <header class="topbar">
+        <div class="topbar-title">Challenges</div>
+        <div class="topbar-user">
+            <span class="user-dot"></span>
+            <span id="topbar-username">—</span>
+        </div>
+    </header>
+
+    <h1 class="welcome-line">CHALLENGE <span class="logo-accent">BOARD</span></h1>
+
+    <section class="stats-grid" style="margin-bottom:32px">
+        <div class="stat-card">
+            <span class="stat-label">Total Challenges</span>
+            <div class="stat-value-large"><span id="stat-total">0</span></div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Solved</span>
+            <div class="stat-value-large" style="color:#10b981"><span id="stat-solved">0</span></div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Remaining</span>
+            <div class="stat-value-large" style="color:#f59e0b"><span id="stat-remaining">0</span></div>
+        </div>
+    </section>
+
+    <div class="challenge-filters" id="cat-filters">
+        <button class="filter-btn active" data-cat="all">All</button>
+    </div>
+
+    <div class="challenges-grid" id="challenges-grid">
+        <div class="no-challenges">
+            <i data-lucide="loader" style="animation:spin 1s linear infinite"></i>
+            <p>Loading challenges...</p>
+        </div>
+    </div>
+</main>
+
+<!-- Submit Modal -->
+<div class="modal submit-modal" id="submit-modal">
+    <div class="modal-content large-modal">
+        <div class="modal-header">
+            <h3><i data-lucide="flag"></i> <span id="modal-title">Challenge</span></h3>
+            <span class="modal-close" onclick="closeModal()">✕</span>
+        </div>
+        <div class="modal-body">
+            <div class="challenge-detail-meta" id="modal-meta"></div>
+            <div class="challenge-detail-desc" id="modal-desc"></div>
+            <div id="hint-section" style="display:none">
+                <button class="hint-toggle" id="hint-btn" onclick="toggleHint()">
+                    <i data-lucide="lightbulb"></i> Show Hint
+                </button>
+                <div class="hint-box" id="hint-box"></div>
+            </div>
+            <div id="solved-notice" style="display:none; margin-bottom:16px">
+                <div class="submit-result success" style="display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="check-circle"></i> You already solved this challenge!
+                </div>
+            </div>
+            <div id="submit-section">
+                <div class="flag-input-row">
+                    <input type="text" class="flag-input" id="flag-input"
+                           placeholder="HackNest{your_flag_here}" autocomplete="off" spellcheck="false">
+                    <button class="submit-btn" onclick="submitFlag()">
+                        <i data-lucide="send"></i> Submit
+                    </button>
+                </div>
+                <div class="submit-result" id="submit-result"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.stat-value-large { font-size: 36px; font-weight: 800; color: #fff; margin-top: 8px; }
+</style>
+
+<script>
+lucide.createIcons();
+
+let allChallenges = [];
+let currentChallengeId = null;
+let hintVisible = false;
+
+const catColors = {
+    web: 'cat-web', pwn: 'cat-pwn', crypto: 'cat-crypto',
+    forensics: 'cat-forensics', misc: 'cat-misc',
+    'reverse engineering': 'cat-rev', rev: 'cat-rev',
+    osint: 'cat-osint'
+};
+
+const diffClass = d => ({ Easy:'diff-easy', Medium:'diff-medium', Hard:'diff-hard', Insane:'diff-insane' }[d] || 'diff-medium');
+
+function getCatClass(cat) {
+    return catColors[cat?.toLowerCase()] || 'cat-misc';
+}
+
+async function loadChallenges() {
+    try {
+        const [chRes, userRes] = await Promise.all([
+            fetch('/api/challenges').then(r => r.json()),
+            fetch('/api/user-stats').then(r => r.json())
+        ]);
+
+        if (userRes.success) {
+            document.getElementById('topbar-username').textContent = userRes.user.Username;
+            if (userRes.user.Role?.toLowerCase() === 'admin')
+                document.getElementById('admin-panel-link').style.display = 'block';
+        }
+
+        if (!chRes.success) return;
+        allChallenges = chRes.challenges;
+
+        const total   = allChallenges.length;
+        const solved  = allChallenges.filter(c => c.IsSolved).length;
+        document.getElementById('stat-total').textContent     = total;
+        document.getElementById('stat-solved').textContent    = solved;
+        document.getElementById('stat-remaining').textContent = total - solved;
+
+        // Build category filter buttons
+        const cats = [...new Set(allChallenges.map(c => c.Category))];
+        const filterBar = document.getElementById('cat-filters');
+        cats.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.dataset.cat = cat;
+            btn.textContent = cat;
+            btn.onclick = () => filterByCat(cat, btn);
+            filterBar.appendChild(btn);
+        });
+
+        renderCards(allChallenges);
+    } catch (err) {
+        console.error('Load error:', err);
+    }
+}
+
+function filterByCat(cat, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCards(cat === 'all' ? allChallenges : allChallenges.filter(c => c.Category === cat));
+}
+
+document.querySelector('[data-cat="all"]').onclick = function() {
+    filterByCat('all', this);
+};
+
+function renderCards(challenges) {
+    const grid = document.getElementById('challenges-grid');
+    if (!challenges.length) {
+        grid.innerHTML = `<div class="no-challenges"><i data-lucide="package-open"></i><p>No challenges found.</p></div>`;
+        lucide.createIcons();
+        return;
+    }
+    grid.innerHTML = challenges.map(c => `
+        <div class="challenge-card ${c.IsSolved ? 'solved' : ''}" onclick="openChallenge(${c.ChallengeID})">
+            ${c.IsSolved ? '<div class="solved-ribbon">SOLVED</div>' : ''}
+            <div class="card-top">
+                <span class="cat-badge ${getCatClass(c.Category)}">${c.Category}</span>
+                <span class="diff-badge ${diffClass(c.Difficulty)}">${c.Difficulty}</span>
+            </div>
+            <h3 class="card-title">${escHtml(c.Title)}</h3>
+            <p class="card-desc">${escHtml(c.Description)}</p>
+            <div class="card-footer">
+                <div class="card-points">${c.Points} <small>pts</small></div>
+                <div class="card-solves"><i data-lucide="users" style="width:13px;height:13px"></i> ${c.SolveCount} solves</div>
+            </div>
+        </div>
+    `).join('');
+    lucide.createIcons();
+}
+
+function openChallenge(id) {
+    const c = allChallenges.find(x => x.ChallengeID === id);
+    if (!c) return;
+    currentChallengeId = id;
+    hintVisible = false;
+
+    document.getElementById('modal-title').textContent = c.Title;
+    document.getElementById('modal-meta').innerHTML = `
+        <span class="cat-badge ${getCatClass(c.Category)}">${c.Category}</span>
+        <span class="diff-badge ${diffClass(c.Difficulty)}">${c.Difficulty}</span>
+        <span style="color:#3b82f6;font-weight:700;font-size:15px;">${c.Points} pts</span>
+        <span style="color:#64748b;font-size:13px;">${c.SolveCount} solves</span>
+    `;
+    document.getElementById('modal-desc').textContent = c.Description;
+
+    const hintSec = document.getElementById('hint-section');
+    const hintBox = document.getElementById('hint-box');
+    const hintBtn = document.getElementById('hint-btn');
+    if (c.Hint) {
+        hintSec.style.display = 'block';
+        hintBox.textContent = c.Hint;
+        hintBox.style.display = 'none';
+        hintBtn.innerHTML = '<i data-lucide="lightbulb"></i> Show Hint';
+    } else {
+        hintSec.style.display = 'none';
+    }
+
+    const solvedNotice = document.getElementById('solved-notice');
+    const submitSec    = document.getElementById('submit-section');
+    const result       = document.getElementById('submit-result');
+    result.style.display = 'none';
+    result.className = 'submit-result';
+    document.getElementById('flag-input').value = '';
+
+    if (c.IsSolved) {
+        solvedNotice.style.display = 'block';
+        submitSec.style.display = 'none';
+    } else {
+        solvedNotice.style.display = 'none';
+        submitSec.style.display = 'block';
+    }
+
+    document.getElementById('submit-modal').classList.add('open');
+    lucide.createIcons();
+}
+
+function closeModal() {
+    document.getElementById('submit-modal').classList.remove('open');
+    currentChallengeId = null;
+}
+
+function toggleHint() {
+    hintVisible = !hintVisible;
+    const box = document.getElementById('hint-box');
+    const btn = document.getElementById('hint-btn');
+    box.style.display = hintVisible ? 'block' : 'none';
+    btn.innerHTML = hintVisible
+        ? '<i data-lucide="eye-off"></i> Hide Hint'
+        : '<i data-lucide="lightbulb"></i> Show Hint';
+    lucide.createIcons();
+}
+
+async function submitFlag() {
+    const flag = document.getElementById('flag-input').value.trim();
+    const result = document.getElementById('submit-result');
+    if (!flag) return;
+
+    const res = await fetch(`/api/challenges/${currentChallengeId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flag })
+    }).then(r => r.json());
+
+    result.style.display = 'block';
+    result.textContent = res.message;
+    result.className = 'submit-result ' + (res.success ? 'success' : 'error');
+
+    if (res.success) {
+        // Mark challenge as solved locally and refresh
+        allChallenges = allChallenges.map(c =>
+            c.ChallengeID === currentChallengeId ? { ...c, IsSolved: true } : c
+        );
+        setTimeout(() => { closeModal(); loadChallenges(); }, 1800);
+    }
+}
+
+document.getElementById('flag-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitFlag();
+});
+
+document.getElementById('submit-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('submit-modal')) closeModal();
+});
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadChallenges();
+</script>
+</body>
+</html>
