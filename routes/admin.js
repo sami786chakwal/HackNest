@@ -79,6 +79,33 @@ router.get('/api/admin/stats', checkAdmin, checkNotBanned, async (req, res) => {
     }
 });
 
+// GET /api/admin/recent-solves - Get the latest user solves for live activity
+router.get('/api/admin/recent-solves', checkAdmin, checkNotBanned, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .query(`
+                SELECT TOP 8
+                    s.SolveID,
+                    s.UserID,
+                    u.Username,
+                    s.ChallengeID,
+                    c.Title AS ChallengeTitle,
+                    s.SolvedAt,
+                    c.Points
+                FROM Solves s
+                INNER JOIN Users u ON u.UserID = s.UserID
+                INNER JOIN Challenges c ON c.ChallengeID = s.ChallengeID
+                ORDER BY s.SolvedAt DESC
+            `);
+
+        res.json({ success: true, solves: result.recordset });
+    } catch (err) {
+        console.error('Admin recent solves error:', err);
+        res.status(500).json({ success: false, message: 'Failed to load recent activity.' });
+    }
+});
+
 // GET /api/admin/users - Get all users for admin
 router.get('/api/admin/users', checkAdmin, checkNotBanned, async (req, res) => {
     try {

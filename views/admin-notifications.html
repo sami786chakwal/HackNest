@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Admin: Notifications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .notif-type-badge {
+            padding: 3px 10px; border-radius: 10px;
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+        }
+        .badge-info    { background: rgba(59,130,246,0.12); color: #3b82f6; }
+        .badge-success { background: rgba(16,185,129,0.12); color: #10b981; }
+        .badge-warning { background: rgba(245,158,11,0.12); color: #f59e0b; }
+        .badge-danger  { background: rgba(239,68,68,0.12);  color: #ef4444; }
+
+        /* Read progress bar */
+        .read-bar-wrap {
+            width: 100px; height: 6px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 3px; overflow: hidden;
+            display: inline-block; vertical-align: middle; margin-right: 6px;
+        }
+        .read-bar-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+        .read-label {
+            color: #10b981; font-size: 13px; font-weight: 700;
+        }
+        .unread-label {
+            color: #64748b; font-size: 13px;
+        }
+
+        /* Compose card */
+        .compose-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px; padding: 28px;
+            margin-bottom: 30px;
+        }
+        .compose-card h2 {
+            color: #fff; font-size: 16px; font-weight: 700;
+            margin: 0 0 20px 0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .compose-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            margin-bottom: 16px;
+        }
+        .compose-textarea {
+            width: 100%; padding: 10px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; color: #fff;
+            font-family: 'Inter', sans-serif; font-size: 14px;
+            resize: vertical; min-height: 90px;
+        }
+        .compose-textarea:focus {
+            outline: none; border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .compose-input {
+            width: 100%; padding: 10px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; color: #fff; font-size: 14px;
+        }
+        .compose-input:focus {
+            outline: none; border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .compose-label { color: #94a3b8; font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+
+        .type-selector {
+            display: flex; gap: 10px; flex-wrap: wrap;
+        }
+        .type-opt {
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 13px; font-weight: 700; border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .type-opt.info    { background: rgba(59,130,246,0.1); color: #3b82f6; }
+        .type-opt.success { background: rgba(16,185,129,0.1); color: #10b981; }
+        .type-opt.warning { background: rgba(245,158,11,0.1); color: #f59e0b; }
+        .type-opt.danger  { background: rgba(239,68,68,0.1);  color: #ef4444; }
+        .type-opt.selected.info    { border-color: #3b82f6; }
+        .type-opt.selected.success { border-color: #10b981; }
+        .type-opt.selected.warning { border-color: #f59e0b; }
+        .type-opt.selected.danger  { border-color: #ef4444; }
+
+        .send-btn {
+            padding: 12px 28px; background: #3b82f6; border: none;
+            border-radius: 8px; color: #fff; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.2s; margin-top: 16px;
+        }
+        .send-btn:hover { background: #2563eb; transform: translateY(-1px); }
+
+        .compose-msg {
+            margin-top: 12px; padding: 10px 14px;
+            border-radius: 8px; font-size: 13px; font-weight: 600;
+            display: none;
+        }
+        .compose-msg.success { background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+        .compose-msg.error   { background: rgba(239,68,68,0.1);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+
+        /* Readers modal */
+        .readers-list { padding: 16px 24px; display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; }
+        .reader-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.02); border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .reader-name { color: #fff; font-weight: 600; font-size: 14px; }
+        .reader-time { color: #64748b; font-size: 12px; }
+
+        .notif-title-cell {
+            color: #fff; font-weight: 600; max-width: 240px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .notif-msg-cell {
+            color: #64748b; font-size: 12px; margin-top: 3px;
+            max-width: 240px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+    </style>
+</head>
+<body class="dash-body">
+
+<aside class="sidebar">
+    <div class="sidebar-logo">HACK<span class="logo-accent">NEST</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"           class="nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+        <a href="/admin/users"         class="nav-item admin-nav"><i data-lucide="users"></i> Manage Users</a>
+        <a href="/admin/challenges"    class="nav-item admin-nav"><i data-lucide="shield"></i> Manage Challenges</a>
+        <a href="/admin/notifications" class="nav-item admin-nav active"><i data-lucide="bell"></i> Notifications</a>
+        <a href="/profile"             class="nav-item"><i data-lucide="user"></i> Profile</a>
+    </nav>
+    <a href="/logout" class="sidebar-logout"><i data-lucide="log-out"></i> Logout</a>
+</aside>
+
+<main class="dash-main">
+    <header class="topbar">
+        <div class="topbar-title">Notification Center <span class="admin-badge">ADMIN</span></div>
+        <div class="topbar-user"><span class="user-dot admin-dot"></span><span id="topbar-username">Admin</span></div>
+    </header>
+
+    <h1 class="welcome-line">BROADCAST <span class="logo-accent">NOTIFICATIONS</span></h1>
+
+    <!-- Stats -->
+    <section class="stats-grid admin-stats" style="margin-bottom:30px">
+        <div class="stat-card"><span class="stat-label">Total Sent</span><div class="stat-value" id="s-total">0</div></div>
+        <div class="stat-card"><span class="stat-label">Active</span><div class="stat-value" style="color:#10b981" id="s-active">0</div></div>
+        <div class="stat-card"><span class="stat-label">Archived</span><div class="stat-value" style="color:#64748b" id="s-archived">0</div></div>
+        <div class="stat-card"><span class="stat-label">Total Reads</span><div class="stat-value" style="color:#3b82f6" id="s-reads">0</div></div>
+    </section>
+
+    <!-- Compose -->
+    <div class="compose-card">
+        <h2><i data-lucide="send" style="width:18px;height:18px;color:#3b82f6"></i> Compose Notification</h2>
+
+        <div class="compose-row">
+            <div>
+                <label class="compose-label">Title *</label>
+                <input type="text" id="c-title" class="compose-input" placeholder="e.g. Platform Maintenance">
+            </div>
+            <div>
+                <label class="compose-label">Type</label>
+                <div class="type-selector" id="type-selector">
+                    <div class="type-opt info selected"    data-type="info"    onclick="selectType(this)">ℹ Info</div>
+                    <div class="type-opt success"          data-type="success" onclick="selectType(this)">✅ Success</div>
+                    <div class="type-opt warning"          data-type="warning" onclick="selectType(this)">⚠ Warning</div>
+                    <div class="type-opt danger"           data-type="danger"  onclick="selectType(this)">🚨 Danger</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label class="compose-label">Message *</label>
+            <textarea id="c-message" class="compose-textarea" placeholder="Write your notification message here..."></textarea>
+        </div>
+
+        <button class="send-btn" onclick="sendNotification()">
+            <i data-lucide="send" style="width:15px;height:15px"></i> Send to All Users
+        </button>
+        <div id="compose-msg" class="compose-msg"></div>
+    </div>
+
+    <!-- Notifications table -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">SENT NOTIFICATIONS</h2>
+            <input type="text" id="n-search" placeholder="Search..." class="search-input" style="width:200px">
+        </div>
+        <div class="table-container">
+            <table class="hack-table admin-table">
+                <thead><tr>
+                    <th>NOTIFICATION</th>
+                    <th>TYPE</th>
+                    <th>READS</th>
+                    <th>STATUS</th>
+                    <th>SENT</th>
+                    <th>ACTIONS</th>
+                </tr></thead>
+                <tbody id="n-table-body">
+                    <tr><td colspan="6" style="text-align:center;color:#64748b;padding:40px">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Readers Modal -->
+<div class="modal" id="readers-modal" style="display:none">
+    <div class="modal-content" style="max-width:500px">
+        <div class="modal-header">
+            <h3><i data-lucide="eye"></i> Who Saw This</h3>
+            <span class="modal-close" onclick="closeReadersModal()">✕</span>
+        </div>
+        <div id="readers-summary" style="padding:16px 24px 0;color:#94a3b8;font-size:14px"></div>
+        <div class="readers-list" id="readers-list"></div>
+    </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+let allNotifs  = [];
+let selType    = 'info';
+
+function selectType(el) {
+    document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selType = el.dataset.type;
+}
+
+async function loadData() {
+    try {
+        const [nRes, uRes] = await Promise.all([
+            fetch('/api/admin/notifications').then(r => r.json()),
+            fetch('/api/user-stats').then(r => r.json())
+        ]);
+
+        if (uRes.success) document.getElementById('topbar-username').textContent = uRes.user.Username;
+        if (!nRes.success) {
+            console.error('Failed to load admin notifications:', nRes.message);
+            document.getElementById('n-table-body').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f87171;padding:40px">Unable to load notifications.</td></tr>';
+            return;
+        }
+
+        allNotifs = Array.isArray(nRes.notifications) ? nRes.notifications : [];
+        updateStats();
+        renderTable(allNotifs);
+    } catch (err) {
+        console.error('Admin notifications load error:', err);
+        document.getElementById('n-table-body').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f87171;padding:40px">Unable to load notifications.</td></tr>';
+    }
+}
+
+function updateStats() {
+    const active   = allNotifs.filter(n => n.IsActive).length;
+    const reads    = allNotifs.reduce((s, n) => s + n.ReadCount, 0);
+    document.getElementById('s-total').textContent    = allNotifs.length;
+    document.getElementById('s-active').textContent   = active;
+    document.getElementById('s-archived').textContent = allNotifs.length - active;
+    document.getElementById('s-reads').textContent    = reads;
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById('n-table-body');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:40px">No notifications sent yet.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(n => {
+        const typeKey  = (n.Type || 'info').toLowerCase();
+        const pct      = n.TotalUsers > 0 ? Math.round((n.ReadCount / n.TotalUsers) * 100) : 0;
+        const dateStr  = new Date(n.CreatedAt).toLocaleString();
+        const titleStr = JSON.stringify(n.Title || '');
+        return `
+        <tr>
+            <td>
+                <div class="notif-title-cell">${escHtml(n.Title)}</div>
+                <div class="notif-msg-cell">${escHtml(n.Message)}</div>
+            </td>
+            <td><span class="notif-type-badge badge-${typeKey}">${escHtml(n.Type || 'Info')}</span></td>
+            <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="read-bar-wrap">
+                        <div class="read-bar-fill" style="width:${pct}%"></div>
+                    </div>
+                    <span class="read-label">${n.ReadCount}</span>
+                    <span class="unread-label">/ ${n.TotalUsers}</span>
+                    <span style="color:#64748b;font-size:12px">(${pct}%)</span>
+                </div>
+            </td>
+            <td>
+                <span class="${n.IsActive ? 'active-tag' : 'inactive-tag'}">
+                    ${n.IsActive ? 'ACTIVE' : 'ARCHIVED'}
+                </span>
+            </td>
+            <td style="color:#64748b;font-size:13px">${dateStr}</td>
+            <td class="actions-col">
+                <button class="action-btn edit" onclick="openReadersModal(${n.NotificationID}, ${titleStr}, ${n.ReadCount}, ${n.TotalUsers})" title="View readers">
+                    <i data-lucide="eye"></i>
+                </button>
+                <button class="action-btn ${n.IsActive ? 'hide' : 'show'}" onclick="toggleNotif(${n.NotificationID})" title="Toggle active">
+                    <i data-lucide="${n.IsActive ? 'eye-off' : 'eye'}"></i>
+                </button>
+                <button class="action-btn delete" onclick="deleteNotif(${n.NotificationID})" title="Delete">
+                    <i data-lucide="trash-2"></i>
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+    lucide.createIcons();
+}
+
+document.getElementById('n-search').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    renderTable(allNotifs.filter(n =>
+        n.Title.toLowerCase().includes(q) || n.Message.toLowerCase().includes(q)
+    ));
+});
+
+async function sendNotification() {
+    const title   = document.getElementById('c-title').value.trim();
+    const message = document.getElementById('c-message').value.trim();
+    if (!title || !message) return showComposeMsg('Title and message are required.', false);
+
+    try {
+        const response = await fetch('/api/admin/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, message, type: selType })
+        });
+        const res = await response.json();
+        showComposeMsg(res.message || 'Notification request completed.', res.success);
+        if (res.success) {
+            document.getElementById('c-title').value   = '';
+            document.getElementById('c-message').value = '';
+            await loadData();
+        }
+    } catch (err) {
+        console.error('Send notification error:', err);
+        showComposeMsg('Unable to send notification. Try again later.', false);
+    }
+}
+
+function showComposeMsg(msg, ok) {
+    const el = document.getElementById('compose-msg');
+    el.textContent  = msg;
+    el.className    = 'compose-msg ' + (ok ? 'success' : 'error');
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+}
+
+async function openReadersModal(id, title, readCount, total) {
+    document.getElementById('readers-summary').innerHTML =
+        `<strong style="color:#fff">${escHtml(title)}</strong>
+         <br><span style="color:#94a3b8;font-size:13px">${readCount} of ${total} users have read this.</span>`;
+    document.getElementById('readers-list').innerHTML =
+        '<div style="text-align:center;padding:20px;color:#64748b">Loading...</div>';
+    document.getElementById('readers-modal').style.display = 'flex';
+    lucide.createIcons();
+
+    const res = await fetch(`/api/admin/notifications/${id}/readers`).then(r => r.json());
+    const list = document.getElementById('readers-list');
+    if (!res.success || !res.readers.length) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b">No one has read this yet.</div>';
+        return;
+    }
+    list.innerHTML = res.readers.map(r => `
+        <div class="reader-item">
+            <span class="reader-name">
+                <i data-lucide="user" style="width:14px;height:14px;color:#3b82f6;margin-right:6px;vertical-align:middle"></i>
+                ${escHtml(r.Username)}
+            </span>
+            <span class="reader-time">${new Date(r.ReadAt).toLocaleString()}</span>
+        </div>
+    `).join('');
+    lucide.createIcons();
+}
+
+function closeReadersModal() {
+    document.getElementById('readers-modal').style.display = 'none';
+}
+
+async function toggleNotif(id) {
+    const res = await fetch(`/api/admin/notifications/${id}/toggle`, { method: 'PATCH' }).then(r => r.json());
+    if (res.success) loadData();
+}
+
+async function deleteNotif(id) {
+    const n = allNotifs.find(x => x.NotificationID === id);
+    const title = n?.Title || 'this notification';
+    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    try {
+        const response = await fetch(`/api/admin/notifications/${id}`, { method: 'DELETE' });
+        const res = await response.json();
+        if (res.success) {
+            await loadData();
+        } else {
+            showComposeMsg(res.message || 'Unable to delete notification.', false);
+        }
+    } catch (err) {
+        console.error('Delete notification error:', err);
+        showComposeMsg('Unable to delete notification. Try again later.', false);
+    }
+}
+
+document.getElementById('readers-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('readers-modal')) closeReadersModal();
+});
+
+function escHtml(s)  { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s)  { return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+loadData();
+</script>
+</body>
+</html>

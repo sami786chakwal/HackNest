@@ -44,6 +44,8 @@ app.use(session({
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const challengeRoutes = require('./routes/challenges');
+const notificationRoutes = require('./routes/notifications');
+app.use('/', notificationRoutes);
 app.use('/', challengeRoutes);
 app.use('/', authRoutes);
 app.use('/', adminRoutes);

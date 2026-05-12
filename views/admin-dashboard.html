@@ -23,6 +23,7 @@
             <a href="/admin" class="nav-item admin-nav active"><i data-lucide="shield-check"></i> Admin Dashboard</a>
             <a href="/admin/users" class="nav-item admin-nav"><i data-lucide="users"></i> Manage Users</a>
             <a href="/admin/challenges" class="nav-item admin-nav"><i data-lucide="shield"></i> Manage Challenges</a>
+            <a href="/admin/notifications" class="nav-item admin-nav"><i data-lucide="bell"></i> Notifications</a>
             <a href="/challenges" class="nav-item"><i data-lucide="eye"></i> View as Player</a>
             <a href="/profile" class="nav-item"><i data-lucide="user"></i> Profile</a>
         </nav>
@@ -85,6 +86,10 @@
                     <a href="/admin/challenges" class="action-card">
                         <i data-lucide="shield"></i>
                         <span>Manage Challenges</span>
+                    </a>
+                    <a href="/admin/notifications" class="action-card">
+                        <i data-lucide="bell"></i>
+                        <span>Send Notifications</span>
                     </a>
                     <a href="/challenges" class="action-card">
                         <i data-lucide="eye"></i>
@@ -173,9 +178,10 @@
 
         async function loadDashboard() {
             try {
-                const [statsRes, userRes] = await Promise.all([
+                const [statsRes, userRes, activityRes] = await Promise.all([
                     fetch('/api/admin/stats').then(r => r.json()),
-                    fetch('/api/user-stats').then(r => r.json())
+                    fetch('/api/user-stats').then(r => r.json()),
+                    fetch('/api/admin/recent-solves').then(r => r.json())
                 ]);
 
                 if (userRes.success) {
@@ -191,12 +197,37 @@
                     document.getElementById('active-challenges').textContent = stats.activeChallenges;
                     document.getElementById('total-solves').textContent = stats.totalSolves;
                 }
+
+                if (activityRes.success) {
+                    renderActivity(activityRes.solves);
+                }
             } catch (err) {
                 console.error('Dashboard load error:', err);
             }
         }
 
+        function renderActivity(items) {
+            const activityList = document.getElementById('recent-activity');
+            if (!items?.length) {
+                activityList.innerHTML = '<div class="activity-item"><span>No recent solve activity yet.</span></div>';
+                return;
+            }
+            activityList.innerHTML = items.map(item => {
+                const time = new Date(item.SolvedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                return `
+                    <div class="activity-item">
+                        <span class="activity-desc"><strong>${escHtml(item.Username)}</strong> solved <strong>${escHtml(item.ChallengeTitle)}</strong> (+${item.Points})</span>
+                        <span class="activity-time">${time}</span>
+                    </div>`;
+            }).join('');
+        }
+
+        function escHtml(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
         loadDashboard();
+        setInterval(loadDashboard, 30000);
     </script>
 </body>
 </html>

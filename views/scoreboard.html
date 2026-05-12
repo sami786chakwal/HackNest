@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackNest — Scoreboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* ── Podium ─────────────────────────────────────────── */
+        .podium-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .podium-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 20px 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.02);
+            min-width: 160px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .podium-card:hover { transform: translateY(-4px); }
+
+        .podium-card.rank-1 {
+            background: linear-gradient(160deg, rgba(234,179,8,0.12), rgba(234,179,8,0.04));
+            border-color: rgba(234,179,8,0.35);
+            padding-top: 32px;
+            min-height: 210px;
+        }
+        .podium-card.rank-2 {
+            background: linear-gradient(160deg, rgba(148,163,184,0.1), rgba(148,163,184,0.03));
+            border-color: rgba(148,163,184,0.25);
+            min-height: 180px;
+        }
+        .podium-card.rank-3 {
+            background: linear-gradient(160deg, rgba(180,83,9,0.1), rgba(180,83,9,0.03));
+            border-color: rgba(180,83,9,0.25);
+            min-height: 160px;
+        }
+
+        .podium-crown {
+            position: absolute;
+            top: -18px;
+            font-size: 28px;
+        }
+
+        .podium-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .rank-1 .podium-avatar { background: rgba(234,179,8,0.15); color: #eab308; border: 2px solid rgba(234,179,8,0.4); }
+        .rank-2 .podium-avatar { background: rgba(148,163,184,0.1); color: #94a3b8; border: 2px solid rgba(148,163,184,0.3); }
+        .rank-3 .podium-avatar { background: rgba(180,83,9,0.1);    color: #b45309; border: 2px solid rgba(180,83,9,0.3); }
+
+        .podium-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+            text-align: center;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .podium-score {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .rank-1 .podium-score { color: #eab308; }
+        .rank-2 .podium-score { color: #94a3b8; }
+        .rank-3 .podium-score { color: #b45309; }
+
+        .podium-solves { font-size: 12px; color: #64748b; }
+
+        .podium-rank-badge {
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+
+        .rank-1 .podium-rank-badge { background: rgba(234,179,8,0.15); color: #eab308; }
+        .rank-2 .podium-rank-badge { background: rgba(148,163,184,0.1); color: #94a3b8; }
+        .rank-3 .podium-rank-badge { background: rgba(180,83,9,0.1);    color: #b45309; }
+
+        /* ── Table ──────────────────────────────────────────── */
+        .me-row td { background: rgba(59,130,246,0.06) !important; }
+        .me-row td:first-child {
+            border-left: 3px solid #3b82f6;
+        }
+
+        .rank-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #3b82f6;
+            font-size: 14px;
+        }
+
+        .rank-num.gold   { color: #eab308; }
+        .rank-num.silver { color: #94a3b8; }
+        .rank-num.bronze { color: #b45309; }
+
+        .user-avatar-sm {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-name-link {
+            color: #f8fafc;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .user-name-link:hover { color: #3b82f6; }
+
+        .me-tag {
+            display: inline-block;
+            margin-left: 8px;
+            background: rgba(59,130,246,0.15);
+            color: #3b82f6;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .score-val {
+            font-weight: 800;
+            color: #fff;
+            font-size: 15px;
+        }
+        .score-val small { color: #64748b; font-weight: 500; font-size: 12px; }
+
+        .solve-count {
+            color: #94a3b8;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .bar-wrap {
+            width: 100px;
+            height: 6px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.6s ease;
+        }
+
+        .me-row .bar-fill { background: linear-gradient(90deg, #3b82f6, #a78bfa); }
+
+        /* ── My rank floating pill ──────────────────────────── */
+        .my-rank-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.25);
+            border-radius: 24px;
+            padding: 8px 18px;
+            color: #60a5fa;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 28px;
+        }
+
+        .my-rank-pill span { color: #fff; }
+
+        /* ── Search / filter bar ────────────────────────────── */
+        .sb-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .sb-controls-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-right: 8px;
+        }
+
+        .sb-search {
+            flex: 1;
+            min-width: 200px;
+            max-width: 350px;
+        }
+
+        .filter-select {
+            min-width: 160px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 10px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .filter-select:hover {
+            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.08));
+            border-color: rgba(59,130,246,0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.2);
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.1));
+        }
+
+        .filter-select option {
+            background: #1a1a2e;
+            color: #e2e8f0;
+            padding: 8px;
+        }
+
+        /* ── Empty / loading ────────────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state i { width: 40px; height: 40px; margin-bottom: 12px; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="dash-body">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-logo">HACK<span class="logo-accent">NEST</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard</a>
+        <a href="/users" class="nav-item"><i data-lucide="users" class="nav-icon"></i> Users</a>
+        <a href="/challenges" class="nav-item"><i data-lucide="shield" class="nav-icon"></i> Challenges</a>
+        <a href="/scoreboard" class="nav-item active"><i data-lucide="trophy" class="nav-icon"></i> Scoreboard</a>
+        <div id="admin-panel-link" style="display:none">
+            <a href="/admin/users" class="nav-item admin-nav"><i data-lucide="shield-check" class="nav-icon"></i> Admin Panel</a>
+        </div>
+        <a href="/profile" class="nav-item"><i data-lucide="user" class="nav-icon"></i> Profile</a>
+        <a href="/notifications" class="nav-item"><i data-lucide="bell" class="nav-icon"></i> Notifications</a>
+        <a href="/settings" class="nav-item"><i data-lucide="settings" class="nav-icon"></i> Settings</a>
+    </nav>
+    <a href="/logout" class="sidebar-logout"><i data-lucide="log-out"></i> Logout</a>
+</aside>
+
+<!-- Main -->
+<main class="dash-main">
+    <header class="topbar">
+        <div class="topbar-title">Scoreboard</div>
+        <div class="topbar-user">
+            <span class="user-dot"></span>
+            <span id="topbar-username">—</span>
+        </div>
+    </header>
+
+    <h1 class="welcome-line">GLOBAL <span class="logo-accent">RANKINGS</span></h1>
+
+    <!-- My rank pill -->
+    <div id="my-rank-pill" class="my-rank-pill" style="display:none">
+        <i data-lucide="crosshair" style="width:16px;height:16px"></i>
+        Your rank: <span id="pill-rank">#—</span> &nbsp;·&nbsp; Score: <span id="pill-score">0</span> pts
+    </div>
+
+    <!-- Podium top 3 -->
+    <div class="podium-row" id="podium-row">
+        <div class="empty-state">
+            <i data-lucide="loader" style="animation:spin 1s linear infinite"></i>
+            <p>Loading rankings...</p>
+        </div>
+    </div>
+
+    <!-- Full table -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">FULL LEADERBOARD</h2>
+            <div class="sb-controls">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="search" style="width:18px;height:18px;color:#64748b"></i>
+                    <input type="text" id="sb-search" placeholder="Search players..." class="search-input sb-search">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="filter" style="width:18px;height:18px;color:#64748b"></i>
+                    <select id="sb-filter" class="filter-select">
+                        <option value="all">Show All Players</option>
+                        <option value="top10">Top 10 Only</option>
+                        <option value="top20">Top 20 Only</option>
+                        <option value="top50">Top 50 Only</option>
+                        <option value="top100">Top 100 Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="hack-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px">RANK</th>
+                        <th>PLAYER</th>
+                        <th>SCORE</th>
+                        <th>SOLVES</th>
+                        <th>JOINED</th>
+                        <th>PROGRESS</th>
+                    </tr>
+                </thead>
+                <tbody id="sb-table-body">
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i data-lucide="loader" style="animation:spin 1s linear infinite"></i>
+                                <p>Loading...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+lucide.createIcons();
+
+let fullBoard   = [];
+let maxScore    = 1;
+let currentUser = null;
+
+async function loadScoreboard() {
+    try {
+        const [sbRes, userRes] = await Promise.all([
+            fetch('/api/scoreboard').then(r => r.json()),
+            fetch('/api/user-stats').then(r => r.json())
+        ]);
+
+        if (userRes.success) {
+            const u = userRes.user;
+            document.getElementById('topbar-username').textContent = u.Username;
+            currentUser = u.Username;
+            if (u.Role?.toLowerCase() === 'admin')
+                document.getElementById('admin-panel-link').style.display = 'block';
+        }
+
+        if (!sbRes.success) return;
+        fullBoard = sbRes.scoreboard;
+        maxScore  = fullBoard[0]?.Score || 1;
+
+        // My rank pill
+        const me = fullBoard.find(p => p.IsCurrentUser);
+        if (me) {
+            document.getElementById('pill-rank').textContent  = '#' + me.Rank;
+            document.getElementById('pill-score').textContent = me.Score;
+            document.getElementById('my-rank-pill').style.display = 'inline-flex';
+        }
+
+        renderPodium(fullBoard.slice(0, 3));
+        renderTable(fullBoard);
+
+    } catch (err) {
+        console.error('Scoreboard load error:', err);
+    }
+}
+
+/* ── Podium ──────────────────────────────────────────────────── */
+function renderPodium(top3) {
+    const podium = document.getElementById('podium-row');
+    if (!top3.length) { podium.innerHTML = ''; return; }
+
+    // Reorder: 2nd | 1st | 3rd
+    const order = [top3[1], top3[0], top3[2]].filter(Boolean);
+    const rankClass = ['rank-2', 'rank-1', 'rank-3'];
+    const crowns    = ['🥈', '🥇', '🥉'];
+    const medals    = ['#2', '#1', '#3'];
+
+    podium.innerHTML = order.map((p, i) => {
+        const initials = p.Username.slice(0, 2).toUpperCase();
+        const cls = rankClass[i];
+        return `
+        <div class="podium-card ${cls}">
+            <div class="podium-crown">${crowns[i]}</div>
+            <div class="podium-avatar">${initials}</div>
+            <div class="podium-name">${escHtml(p.Username)}</div>
+            <div class="podium-score">${p.Score} <small style="font-size:12px;font-weight:500;color:#64748b">pts</small></div>
+            <div class="podium-solves">${p.SolveCount} solve${p.SolveCount !== 1 ? 's' : ''}</div>
+            <div class="podium-rank-badge">${medals[i]}</div>
+        </div>`;
+    }).join('');
+}
+
+/* ── Table ───────────────────────────────────────────────────── */
+function renderTable(players) {
+    const tbody = document.getElementById('sb-table-body');
+
+    if (!players.length) {
+        tbody.innerHTML = `
+            <tr><td colspan="6">
+                <div class="empty-state">
+                    <i data-lucide="users"></i>
+                    <p>No players found.</p>
+                </div>
+            </td></tr>`;
+        lucide.createIcons();
+        return;
+    }
+
+    tbody.innerHTML = players.map(p => {
+        const isMe   = !!p.IsCurrentUser;
+        const pct    = maxScore > 0 ? Math.round((p.Score / maxScore) * 100) : 0;
+        const joined = new Date(p.CreatedAt).toLocaleDateString('en-US', { month:'short', year:'numeric' });
+        const initials = p.Username.slice(0, 2).toUpperCase();
+
+        let rankDisplay = `<span class="rank-num">#${p.Rank}</span>`;
+        if (p.Rank == 1) rankDisplay = `<span class="rank-num gold">🥇 #1</span>`;
+        if (p.Rank == 2) rankDisplay = `<span class="rank-num silver">🥈 #2</span>`;
+        if (p.Rank == 3) rankDisplay = `<span class="rank-num bronze">🥉 #3</span>`;
+
+        return `
+        <tr class="${isMe ? 'me-row' : ''}">
+            <td>${rankDisplay}</td>
+            <td>
+                <div class="user-cell">
+                    <div class="user-avatar-sm">${initials}</div>
+                    <div>
+                        <a href="/profile/${encodeURIComponent(p.Username)}" class="user-name-link">
+                            ${escHtml(p.Username)}
+                        </a>
+                        ${isMe ? '<span class="me-tag">YOU</span>' : ''}
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="score-val">${p.Score} <small>pts</small></span>
+            </td>
+            <td>
+                <span class="solve-count">
+                    <i data-lucide="check-circle" style="width:13px;height:13px;color:#10b981"></i>
+                    ${p.SolveCount}
+                </span>
+            </td>
+            <td style="color:#64748b;font-size:13px">${joined}</td>
+            <td>
+                <div class="bar-wrap">
+                    <div class="bar-fill" style="width:${pct}%"></div>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+
+    lucide.createIcons();
+}
+
+/* ── Search & Filter ─────────────────────────────────────────── */
+function applyFilters() {
+    const q      = document.getElementById('sb-search').value.toLowerCase();
+    const filter = document.getElementById('sb-filter').value;
+
+    let limit = Infinity;
+    if (filter === 'top10') limit = 10;
+    else if (filter === 'top20') limit = 20;
+    else if (filter === 'top50') limit = 50;
+    else if (filter === 'top100') limit = 100;
+
+    let filtered = fullBoard.filter(p =>
+        p.Username.toLowerCase().includes(q)
+    );
+    if (limit !== Infinity) filtered = filtered.slice(0, limit);
+
+    renderTable(filtered);
+}
+
+document.getElementById('sb-search').addEventListener('input',  applyFilters);
+document.getElementById('sb-filter').addEventListener('change', applyFilters);
+
+function escHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+loadScoreboard();
+</script>
+</body>
+</html>

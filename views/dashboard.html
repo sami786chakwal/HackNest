@@ -119,12 +119,15 @@
         // Initialize Icons
         lucide.createIcons();
 
-        // Fetch User Data from your API
-        fetch('/api/user-stats')
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    const u = data.user;
+        async function loadDashboardData() {
+            try {
+                const [userRes, solvesRes] = await Promise.all([
+                    fetch('/api/user-stats').then(r => r.json()),
+                    fetch('/api/recent-solves').then(r => r.json())
+                ]);
+
+                if (userRes.success) {
+                    const u = userRes.user;
                     document.getElementById('topbar-username').textContent = u.Username;
                     document.getElementById('welcome-name').textContent = u.Username.toUpperCase();
                     document.getElementById('stat-score').textContent = u.Score;
@@ -137,8 +140,162 @@
                         document.getElementById('admin-panel-card').style.display = 'block';
                     }
                 }
-            })
-            .catch(err => console.error("Error loading stats:", err));
+
+                if (solvesRes.success) {
+                    renderActivityFeed(solvesRes.solves);
+                }
+            } catch (err) {
+                console.error('Error loading dashboard data:', err);
+            }
+        }
+
+        function renderActivityFeed(items) {
+            const feed = document.getElementById('activity-feed');
+            if (!items?.length) {
+                feed.innerHTML = '<div class="activity-item"><div class="activity-left"><i data-lucide="info" class="icon-info"></i><span class="activity-text">No recent solves yet.</span></div></div>';
+                lucide.createIcons();
+                return;
+            }
+
+            feed.innerHTML = items.map(item => {
+                const time = new Date(item.SolvedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                return `
+                    <div class="activity-item">
+                        <div class="activity-left">
+                            <i data-lucide="check-circle" class="icon-success"></i>
+                            <span class="activity-text"><strong>${escHtml(item.Username)}</strong> solved <strong>${escHtml(item.ChallengeTitle)}</strong></span>
+                        </div>
+                        <span class="activity-time">${time}</span>
+                    </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function escHtml(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        loadDashboardData();
+        setInterval(loadDashboardData, 30000);
     </script>
+    <!-- ── Notification Popup ── -->
+<div id="notif-popup" style="
+    display:none; position:fixed; bottom:28px; right:28px; z-index:9999;
+    background:rgba(22,27,38,0.97); border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px; padding:20px 24px; max-width:360px; width:90%;
+    box-shadow:0 20px 50px rgba(0,0,0,0.5); backdrop-filter:blur(12px);
+    animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+">
+    <style>
+        @keyframes slideUp {
+            from { opacity:0; transform:translateY(20px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .notif-type-bar {
+            position:absolute; top:0; left:0; right:0; height:3px;
+            border-radius:16px 16px 0 0;
+        }
+        .notif-type-info    { background:#3b82f6; }
+        .notif-type-success { background:#10b981; }
+        .notif-type-warning { background:#f59e0b; }
+        .notif-type-danger  { background:#ef4444; }
+    </style>
+    <div class="notif-type-bar" id="popup-bar"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+            <i id="popup-icon" data-lucide="bell" style="width:18px;height:18px;color:#3b82f6"></i>
+            <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">
+                New Notification
+            </span>
+        </div>
+        <span onclick="dismissPopup()" style="color:#64748b;cursor:pointer;font-size:18px;line-height:1">✕</span>
+    </div>
+    <div id="popup-title" style="color:#fff;font-weight:700;font-size:16px;margin-bottom:6px"></div>
+    <div id="popup-msg"   style="color:#94a3b8;font-size:13px;line-height:1.6;margin-bottom:16px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="dismissPopup()" style="
+            padding:8px 16px; background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1); border-radius:8px;
+            color:#94a3b8; font-size:13px; cursor:pointer; font-weight:600;">
+            Later
+        </button>
+        <button id="popup-got-it" onclick="gotItPopup()" style="
+            padding:8px 16px; background:#3b82f6; border:none;
+            border-radius:8px; color:#fff; font-size:13px;
+            cursor:pointer; font-weight:700;">
+            Got it!
+        </button>
+    </div>
+    <div id="popup-more" style="text-align:center;margin-top:10px;display:none">
+        <a href="/notifications" style="color:#3b82f6;font-size:12px;font-weight:600;text-decoration:none">
+            + <span id="popup-more-count">0</span> more unread — View all
+        </a>
+    </div>
+</div>
+
+<script>
+    let popupNotifId = null;
+
+    const typeColors = {
+        info:    '#3b82f6',
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger:  '#ef4444'
+    };
+    const typeIcons = {
+        info:    'bell',
+        success: 'check-circle',
+        warning: 'alert-triangle',
+        danger:  'alert-octagon'
+    };
+
+    async function checkForPopup() {
+        try {
+            const res = await fetch('/api/notifications/unread-count').then(r => r.json());
+            if (!res.success || !res.latest) return;
+
+            const n     = res.latest;
+            const color = typeColors[n.Type] || typeColors.info;
+            const icon  = typeIcons[n.Type]  || 'bell';
+
+            popupNotifId = n.NotificationID;
+            document.getElementById('popup-title').textContent = n.Title;
+            document.getElementById('popup-msg').textContent   = n.Message;
+            document.getElementById('popup-bar').className     = 'notif-type-bar notif-type-' + n.Type;
+            document.getElementById('popup-got-it').style.background = color;
+
+            // Update icon
+            const iconEl = document.getElementById('popup-icon');
+            iconEl.setAttribute('data-lucide', icon);
+            iconEl.style.color = color;
+            lucide.createIcons();
+
+            // Show "X more unread" link if multiple
+            if (res.unreadCount > 1) {
+                document.getElementById('popup-more-count').textContent = res.unreadCount - 1;
+                document.getElementById('popup-more').style.display = 'block';
+            } else {
+                document.getElementById('popup-more').style.display = 'none';
+            }
+
+            document.getElementById('notif-popup').style.display = 'block';
+        } catch (e) {}
+    }
+
+    function dismissPopup() {
+        document.getElementById('notif-popup').style.display = 'none';
+    }
+
+    async function gotItPopup() {
+        if (!popupNotifId) return;
+        await fetch(`/api/notifications/${popupNotifId}/read`, { method: 'POST' });
+        dismissPopup();
+        // Update bell badge if it exists
+        if (typeof updateBellBadge === 'function') updateBellBadge();
+    }
+
+    // Run 1.5s after page load so the dashboard loads first
+    setTimeout(checkForPopup, 1500);
+</script>
 </body>
 </html>
