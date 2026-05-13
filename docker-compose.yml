@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hacknest-db
+    environment:
+      ACCEPT_EULA: 'Y'
+      SA_PASSWORD: 'Admin123!'
+    ports:
+      - '1433:1433'
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: [ 'CMD-SHELL', '/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Admin123! -Q "SELECT 1" >/dev/null 2>&1' ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: hacknest-app
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SESSION_SECRET: 'hacknest_secret'
+      MSSQL_SERVER: sqlserver
+      MSSQL_PORT: 1433
+      MSSQL_DB: HackNest
+      MSSQL_USER: sa
+      MSSQL_PASSWORD: Admin123!
+      APP_ADMIN_USERNAME: admin
+      APP_ADMIN_EMAIL: admin@hacknest.local
+      APP_ADMIN_PASSWORD: Admin123!
+    command: ['./docker-entrypoint.sh']
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:

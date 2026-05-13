@@ -1,14 +1,14 @@
 const sql = require('mssql');
 
 const config = {
-  server: 'localhost',
-  port: 1433,
-  database: 'HackNest',
+  server: process.env.MSSQL_SERVER || 'localhost',
+  port: parseInt(process.env.MSSQL_PORT, 10) || 1433,
+  database: process.env.MSSQL_DB || 'HackNest',
   authentication: {
     type: 'default',
     options: {
-      userName: 'sa',
-      password: 'Admin123!'
+      userName: process.env.MSSQL_USER || 'sa',
+      password: process.env.MSSQL_PASSWORD || 'Admin123!'
     }
   },
   options: {
