@@ -225,6 +225,22 @@ Modify `HackNest.sql` and `scripts/init-db.js` for schema updates.
 - Admin user is created automatically on first run
 - Default admin credentials: `admin` / `Admin123!`
 
+## Database Backup
+
+To ensure data safety, a backup of the database is included in the repository. You can restore the database from this backup file using SQL Server Management Studio or any compatible SQL client.
+
+### Restoring from Backup
+
+1. Open SQL Server Management Studio.
+2. Connect to your SQL Server instance.
+3. Right-click on the `Databases` node and select `Restore Database...`.
+4. Choose `Device` and select the backup file from the repository.
+5. Follow the prompts to restore the database.
+
+### Backup File Location
+
+The backup file is located in the root of the repository. Ensure you have the necessary permissions to access and restore the database from this file.
+
 ## Contributing
 
 1. Fork the repository
