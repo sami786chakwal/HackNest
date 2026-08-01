@@ -27,14 +27,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // --- 3. Session Management ---
 // In a real prod app, use 'connect-mongo' or 'connect-redis' to store sessions
+const isProduction = process.env.NODE_ENV === 'production';
+const isSecureSession = process.env.SESSION_SECURE === 'true';
+if (isProduction) {
+    app.set('trust proxy', 1);
+}
 app.use(session({
     name: 'hacknest.sid', // Custom cookie name is more professional
-    secret: process.env.SESSION_SECRET || 'dev_secret_key_8891', 
+    secret: process.env.SESSION_SECRET || 'dev_secret_key_8891',
     resave: false,
     saveUninitialized: false,
-    cookie: { 
+    cookie: {
         httpOnly: true, // Prevents XSS from reading the cookie
-        secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in prod
+        secure: isProduction && isSecureSession, // Require explicit SESSION_SECURE in production
         sameSite: 'lax',
         maxAge: 60 * 60 * 1000 // 1 hour
     }

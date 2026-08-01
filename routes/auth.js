@@ -127,7 +127,7 @@ router.post('/register', async (req, res) => {
             .input('u', sql.NVarChar, username)
             .input('e', sql.NVarChar, email)
             .input('p', sql.NVarChar, hashedPassword)
-            .query('INSERT INTO Users (Username, Email, Password, Score, Role) VALUES (@u, @e, @p, 0, "User")');
+            .query("INSERT INTO Users (Username, Email, Password, Score, Role) VALUES (@u, @e, @p, 0, 'User')");
 
         res.json({ success: true, message: 'Account synchronized. Welcome.' });
     } catch (err) {
@@ -158,7 +158,13 @@ router.post('/login', async (req, res) => {
             role: user.Role
         };
 
-        res.json({ success: true, message: 'Authentication successful.' });
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error('Session save error:', saveErr);
+                return res.status(500).json({ success: false, message: 'Failed to establish session.' });
+            }
+            res.json({ success: true, message: 'Authentication successful.' });
+        });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Connection failure.' });
     }
@@ -314,8 +320,11 @@ router.get('/api/user-profile/:username', checkAuth, checkNotBanned, async (req,
 });
 
 router.get('/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.clearCookie('connect.sid'); // Clean up cookie on client
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Logout error:', err);
+        }
+        res.clearCookie('hacknest.sid', { path: '/' }); // Clean up cookie on client
         res.redirect('/login');
     });
 });
